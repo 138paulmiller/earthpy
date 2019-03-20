@@ -8,8 +8,6 @@ Notice : exec_ arguments much match those defined iwith the cli module
 '''
 
 
-
-
 def exec_retrieve(dataset, format, bbox, res, dimen, cache=False):
     '''
         params

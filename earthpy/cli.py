@@ -18,14 +18,13 @@ dem :
 
 ACTION_TABLE = {
     # action : callback, args used
-    'retrieve' :  actions.exec_retrieve,
+    'retrieve' :  actions.exec_retrieve,    # retrieve tiles
+    'clean' :  actions.exec_clean,          # clean cache
 }
 AVAILABLE_ACTIONS = [ key for key in ACTION_TABLE.keys()]
 
-                              
 SUPPORTED_DATASETS = ('sat', 'dem') 
-SUPPORTED_FORMATS = ('png', 'r16') 
-
+SUPPORTED_FORMATS =  ('png', 'r16') 
 DEFAULT_RESOLUTION = {
     # srtm gl1 data is 3601x3601 big endian sint16 raster
     'dem' :  3061,
