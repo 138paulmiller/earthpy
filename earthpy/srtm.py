@@ -35,7 +35,7 @@ class SRTMGrabber(tile.Grabber):
 		self.raster_map = []
 
 
-
+	# Should allow to check if file is still mapped after a max cache clean. If not, remap the file
 	def prepare_retrieve(self, bbox):
 		# cache all files that intersect with 
 		self.raster_map.clear()

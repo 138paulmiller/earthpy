@@ -19,7 +19,7 @@ dem :
 ACTION_TABLE = {
 	# action : callback, args used
 	'retrieve' :  actions.exec_retrieve,    # retrieve tiles
-	'clean' :  actions.exec_clean,          # clean cache for the given dataset
+	'clean' :  actions.exec_clean,          # clean all cache the datasets
 }
 AVAILABLE_ACTIONS = [ key for key in ACTION_TABLE.keys()]
 
@@ -74,22 +74,23 @@ def cli():
 								   metavar='Width Height', nargs=2, type=int)
 
 	parser.add_argument('--dataset'  , help=f'Query raster tiles. Supported Datasets: ' + ' '.join(SUPPORTED_DATASETS),
-								   metavar=('Dataset') , nargs=1  )
+								   metavar=('dataset_id') , nargs=1  )
 
 	parser.add_argument('--format'  , help=f'Raster tile format. Supported Output Formats: ' + ' '.join(SUPPORTED_OUTPUT_FORMATS),
 								   metavar=('Format') , nargs=1 )
 
-	parser.add_argument('--outdir'  , help=f'Raster tile output directory',
-								   metavar=('path') , nargs=1 )
+	parser.add_argument('--outdir' , help=f'Raster tile output directory',
+								   metavar=('path') , nargs=1, default='out' )
 
+	
 	# flag ewxample
-	#parser.add_argument('--cache', help='Caches raw datafiles locally. Faster re-retrieval',
-	#                              action='store_true')
+	parser.add_argument('--cache', help='Caches raw datafiles locally. Faster re-retrieval',
+	                              action='store_true')
 									   
 	
+
 	# parse arguments
 	cli_args  = parser.parse_args()
-	
 
 	# lowercase any string cli arguments with parameters
 	cli_args.action     = try_lower(maybe_datum(cli_args.action  ))
@@ -97,7 +98,7 @@ def cli():
 	cli_args.format     = try_lower(maybe_datum(cli_args.format  ))
 
 	# strip lists to datum
-	cli_args.outdir     = 			maybe_datum(cli_args.format  )
+	cli_args.outdir     = 			maybe_datum(cli_args.outdir  )
 	
 	
 	if cli_args.res is None:
@@ -128,6 +129,8 @@ def cli():
 	# remove action. Leave only arguments
 	del  args_dict['action']
 	
+	print(args_dict)
+
 	# get all required and optional args from  the cli args
 	action_args =  { key:args_dict[key] for key in all_args if key in args_dict.keys() and args_dict[key] != None}  
 	ignored_args = [ key for key in args_dict.keys() if args_dict[key] != None and key not in all_args ]

@@ -12,18 +12,18 @@ DATASET_TO_GRABBER = {
 	'sat' : sat.SATGrabber,
 }
 
-def exec_retrieve(dataset, outdir, bbox, format, res, dimen):
+def exec_retrieve(dataset, outdir, bbox, format, res, dimen, cache=False):
 	'''
 	params
 	    bbox    : float tuple   ( minlat minlon maxlat maxlon )
 	    dataset : tuple         "dem"|"sat"
 	    res     : int           raster_resolution 
 	    dimen  : (int,int  )   dimenions of tile grid
-	    cache   : bool          True|False
+	    cache   : bool          True|False - save cached data after
 	'''
 	#map dataset to class and call
-	print(f'{bbox}\n{dimen}\n')
-	DATASET_TO_GRABBER[dataset]().retrieve_tiles(outdir, bbox, format, res, dimen)
+	DATASET_TO_GRABBER[dataset]().retrieve_tiles(outdir, bbox, format, res, dimen, cache)
 
-def exec_clean(dataset):
-	DATASET_TO_GRABBER[dataset]().clean_cache()
+def exec_clean():
+	for key,value in DATASET_TO_GRABBER.items():
+		value().clean_cache()

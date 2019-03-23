@@ -20,8 +20,7 @@ class Grabber:
 		self.subclass = subclass if subclass else self
 		self.root_dir = os.path.abspath(os.path.dirname(__file__))
 		self.cache_dir = os.path.join(self.root_dir, f'__{cache_dir_id}cache__') if cache_dir_id else None
-		if self.cache_dir:
-			os.makedirs(os.path.join(self.root_dir, os.path.dirname(self.cache_dir)), exist_ok=True)
+
 
 
 	#---------- interface ----------------
@@ -37,10 +36,10 @@ class Grabber:
 
 	# ----------- actions ---------------------
 	
-	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen):
+	## TODO Create a cache max that calls clean after
+	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, cache=False):
 		
 		self.subclass.prepare_retrieve(bbox)
-
 		
 		bbox_size = bbox[2]  - bbox[0], bbox[3]  - bbox[1]
 		stride = bbox_size[0]/dimen[0] , bbox_size[1]/dimen[1] 
@@ -59,7 +58,9 @@ class Grabber:
 
 				lat += stride[0]
 			lon += stride[1]
-		
+		if cache:
+			self.clean_cache()
+
 
 	def clean_cache(self):
 		if not self.cache_dir is None:
