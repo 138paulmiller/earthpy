@@ -1,7 +1,7 @@
 import os,math
 import urllib.request
 import numpy as np
-import tile
+import grabber
 
 '''
 SDSC default server directory structure 
@@ -18,16 +18,17 @@ SDSC default server directory structure
 			S01E006.hgt
 			...
 '''
-SRTM1_SERVER_ROOT='https://cloud.sdsc.edu/v1/AUTH_opentopography/Raster/SRTM_GL1/SRTM_GL1_srtm'
-SRTM1_SOURCE_RES = 3601,3601
+# register 
 
 
- 
+srtm1_server_root='https://cloud.sdsc.edu/v1/AUTH_opentopography/Raster/SRTM_GL1/SRTM_GL1_srtm'
+srtm1_source_res = 3601,3601
+
 
 # Grabs SRTM Data Default is GL1
-class SRTMGrabber(tile.Grabber):
-	def __init__(self, server_root=SRTM1_SERVER_ROOT, source_res=SRTM1_SOURCE_RES):
-		super().__init__(self, 'srtm')
+class SRTM(grabber.Grabber):
+	def __init__(self, server_root=srtm1_server_root, source_res=srtm1_source_res):
+		super().__init__(self,  raster_formats=( 'r16' ) )
 		self.server_root =server_root
 		self.source_res = source_res
 		self.source_chunk_size = self.source_res[0]*self.source_res[1] 
@@ -51,7 +52,7 @@ class SRTMGrabber(tile.Grabber):
 		print(self.raster_map)
 				
 	def retrieve_tile(self, latlon, end_latlon, res, format):
-		# 
+		# stride over each tile that overlaps and memcpy block into row. then move to next row
 		return None
 
 		
@@ -62,7 +63,7 @@ class SRTMGrabber(tile.Grabber):
 		url = os.path.join(self.server_root, filepath)
 		# search for filename in cache. If exists do nothing
 		if not os.path.exists( cachefile ):
-			print(f'Caching\n{url}as\n{cachefile}...')
+			print(f'Caching\n{url}\n')
 			# create dirs for path
 			os.makedirs(os.path.dirname(cachefile), exist_ok=True)
 

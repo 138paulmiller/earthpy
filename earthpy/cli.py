@@ -23,17 +23,6 @@ ACTION_TABLE = {
 }
 AVAILABLE_ACTIONS = [ key for key in ACTION_TABLE.keys()]
 
-SUPPORTED_DATASETS = ('sat', 'srtm') 
-SUPPORTED_OUTPUT_FORMATS =  ('png', 'r16') 
-DEFAULT_RESOLUTION = {
-	# srtm gl1 data is 3601x3601 big endian sint16 raster
-	'dem' :  3061,
-	
-	# EOX::Maps max resolution is 4096x4096 raster
-	'sat' :  4096,
-	
-}
-
 
 def cli():
 	'''Helpers'''
@@ -73,10 +62,10 @@ def cli():
 	parser.add_argument('--res'  , help='Resolution of output raster tiles',
 								   metavar='Width Height', nargs=2, type=int)
 
-	parser.add_argument('--dataset'  , help=f'Query raster tiles. Supported Datasets: ' + ' '.join(SUPPORTED_DATASETS),
+	parser.add_argument('--dataset'  , help=f'Dataset to query raster tiles from.',
 								   metavar=('dataset_id') , nargs=1  )
 
-	parser.add_argument('--format'  , help=f'Raster tile format. Supported Output Formats: ' + ' '.join(SUPPORTED_OUTPUT_FORMATS),
+	parser.add_argument('--format'  , help=f'Raster tile format.',
 								   metavar=('Format') , nargs=1 )
 
 	parser.add_argument('--outdir' , help=f'Raster tile output directory',
@@ -104,20 +93,11 @@ def cli():
 	if cli_args.res is None:
 	   cli_args.res = DEFAULT_RESOLUTION[cli_args.res]
 	
-	# check args    
-	if not cli_args.action in AVAILABLE_ACTIONS:
-		error(f'Unsupported action {cli_args.action}')
+
 	if cli_args.bbox:
 		if cli_args.bbox[0] >= cli_args.bbox[2] or cli_args.bbox[1] >= cli_args.bbox[3]: 
 			error(f'Invalid bounding box {cli_args.bbox}')
 
-	if cli_args.format :
-		if not cli_args.format  in SUPPORTED_OUTPUT_FORMATS:
-			error(f'Unsupported format {cli_args.format}')
-
-	if cli_args.dataset :
-		if not cli_args.dataset  in SUPPORTED_DATASETS:
-			error(f'Unsupported dataset {cli_args.dataset}')
 
 	# get action info
 	action = ACTION_TABLE[ cli_args.action ]

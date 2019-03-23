@@ -1,15 +1,32 @@
-'''
-dem.py
-	Digital Elevation Model Utilities. Used for retrieval and processing of elevation data.
-'''
 # cache all files that intersect with the bbox. Split the data accordingly to match the tile size requests
 import os
 import shutil
 
+dataset_to_grabber_map = {}
+# call to register support for new dataset
+# dataset - string representaion of dataset
+# grabber - class that inherits Grabber formatted as "module.classname" where module is module.py
+def add(dataset, grabber ):
+	global dataset_to_grabber_map
+	module_name, class_name = grabber.split('.')
+	print(dataset_to_grabber_map)
+	dataset_to_grabber_map[dataset] = getattr(__import__(module_name), class_name) 
+
+def get(dataset):
+	global dataset_to_grabber_map
+	if not dataset in dataset_to_grabber_map.keys():
+		raise Exception('Unsupported Dataset')
+
+	return dataset_to_grabber_map[dataset]()
+
+def all():
+	global dataset_to_grabber_map
+	return dataset_to_grabber_map.values()
+
 
 # Tile grabber interface
 class Grabber:
-	def __init__(self, subclass, cache_dir_id):
+	def __init__(self, subclass, raster_formats=( '' ) ):
 		'''
 			subclass - reference to inheriting class
 			bbox - latlon bound to query
@@ -17,10 +34,11 @@ class Grabber:
 			raster_res - resolution of raster
 			dimen - dimension of tiles grid to create from bbox. dimen is the  width and height of grid  
 		'''
+		self.raster_formats = raster_formats
+		self.subclass_name = subclass.__class__.__name__.lower() 
 		self.subclass = subclass if subclass else self
 		self.root_dir = os.path.abspath(os.path.dirname(__file__))
-		self.cache_dir = os.path.join(self.root_dir, f'__{cache_dir_id}cache__') if cache_dir_id else None
-
+		self.cache_dir = os.path.join(self.root_dir, f'__{self.subclass_name }cache__') if self.subclass_name  else None
 
 
 	#---------- interface ----------------
@@ -31,14 +49,16 @@ class Grabber:
 
 	# Should return raw data 
 	def retrieve_tile(self, latlon, end_latlon, res, format):
-		pass
-
+		raise Exception('Retrieve functionality is not implemented ')
 
 	# ----------- actions ---------------------
 	
+
 	## TODO Create a cache max that calls clean after
-	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, cache=False):
-		
+	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, prefix='Tile',cache=False):
+		if not raster_format in self.raster_formats:
+			raise Exception('Unsupported Format')
+
 		self.subclass.prepare_retrieve(bbox)
 		
 		bbox_size = bbox[2]  - bbox[0], bbox[3]  - bbox[1]
@@ -50,11 +70,11 @@ class Grabber:
 			lat =bbox[0]
 			for i in range(0, dimen[0] ):
 				# TODO - thread this.
-				raw_data = self.subclass.retrieve_tile( (lat, lon), (lat+stride[0], lon+stride[1]), raster_res, raster_format)
+				data = self.subclass.retrieve_tile( (lat, lon), (lat+stride[0], lon+stride[1]), raster_res, raster_format)
 				
-				filename = f'Tile_x{i}_y{j}.{raster_format}'
+				filename = f'{prefix}_x{i}_y{j}.{raster_format}'
 				filename = os.path.join(outdir, filename)
-				self.save_tile(raw_data, filename)
+				self.save_tile(data, filename)
 
 				lat += stride[0]
 			lon += stride[1]
