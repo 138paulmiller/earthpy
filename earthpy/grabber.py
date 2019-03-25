@@ -35,8 +35,8 @@ class Grabber:
 			dimen - dimension of tiles grid to create from bbox. dimen is the  width and height of grid  
 		'''
 		self.raster_formats = raster_formats
-		self.subclass_name = subclass.__class__.__name__.lower() 
 		self.subclass = subclass if subclass else self
+		self.subclass_name = self.subclass.__class__.__name__.lower() 
 		self.root_dir = os.path.abspath(os.path.dirname(__file__))
 		self.cache_dir = os.path.join(self.root_dir, f'__{self.subclass_name }cache__') if self.subclass_name  else None
 
@@ -89,7 +89,7 @@ class Grabber:
 
 	# ----------- helpers  ---------------------
 
-	# called adfter tile is retrieved!
+	# called after tile is retrieved!
 	def save_tile(self,raw_data, filename):
 		if raw_data:
 			os.makedirs(os.path.dirname(filename), exist_ok=True)
