@@ -26,7 +26,7 @@ AVAILABLE_ACTIONS = [ key for key in ACTION_TABLE.keys()]
 
 def cli():
 	'''Helpers'''
-	maybe_datum = lambda arg : arg[0] if arg else arg   
+	maybe_datum = lambda arg : arg if arg else arg   
 	
 	try_lower = lambda s : s.lower() if isinstance(s, str) else s
 
@@ -82,9 +82,9 @@ def cli():
 	cli_args  = parser.parse_args()
 
 	# lowercase any string cli arguments with parameters
-	cli_args.action     = try_lower(maybe_datum(cli_args.action  ))
-	cli_args.dataset    = try_lower(maybe_datum(cli_args.dataset ))
-	cli_args.format     = try_lower(maybe_datum(cli_args.format  ))
+	cli_args.action     = try_lower(maybe_datum(cli_args.action[0]  ))
+	cli_args.dataset    = try_lower(maybe_datum(cli_args.dataset[0] ))
+	cli_args.format     = try_lower(maybe_datum(cli_args.format[0]  ))
 
 	# strip lists to datum
 	cli_args.outdir     = 			maybe_datum(cli_args.outdir  )

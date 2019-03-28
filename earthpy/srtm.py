@@ -1,6 +1,10 @@
+from struct import unpack,calcsize
 import os,math
 import urllib.request
 import numpy as np
+
+
+
 import grabber
 
 '''
@@ -25,6 +29,10 @@ srtm1_server_root='https://cloud.sdsc.edu/v1/AUTH_opentopography/Raster/SRTM_GL1
 srtm1_source_res = 3601,3601
 
 
+def submatrix(arr, row_range, col_range):
+	return arr[np.ix_( row_range, col_range)]
+
+
 # Grabs SRTM Data Default is GL1
 class SRTM(grabber.Grabber):
 	def __init__(self, server_root=srtm1_server_root, source_res=srtm1_source_res):
@@ -33,30 +41,78 @@ class SRTM(grabber.Grabber):
 		self.source_res = source_res
 		self.source_chunk_size = self.source_res[0]*self.source_res[1] 
 		# grid of mapped memory to downloaded raster tiles
-		self.raster_map = []
-
-
+		self.raster_map = {}
+		
 	# Should allow to check if file is still mapped after a max cache clean. If not, remap the file
 	def prepare_retrieve(self, bbox):
 		# cache all files that intersect with 
-		self.raster_map.clear()
 		raster_i = 0
 		trunc_bbox = tuple(map(math.trunc, bbox))
-		for lon in range( trunc_bbox[1], trunc_bbox[3] ):
-			raster_row = []
-			for lat in range(trunc_bbox[0], trunc_bbox[2] ):
-				print (f'{lat} {lon}')
+		for lon in range( trunc_bbox[1], trunc_bbox[3]+1):
+			self.raster_map[lon]  = {}
+			for lat in range(trunc_bbox[0], trunc_bbox[2]+1 ):
 				filename = self.get_srtm_file_name(lat, lon) 
-				raster_row.append( self.load_srtm_file(lat, lon) )
-			self.raster_map+=(raster_row)
-		print(self.raster_map)
-				
+				self.raster_map[lon][lat] = self.load_srtm_file(lat, lon) 
+
+
 	def retrieve_tile(self, latlon, end_latlon, res, format):
 		# stride over each tile that overlaps and memcpy block into row. then move to next row
-		return None
+		raster =  None
+		lat, lon = latlon
+		end_lat, end_lon = end_latlon
+		range_lat, range_lon = end_lat - lat, end_lon -  lon 
+		
+		print('-------------TILE------------------')
+		tile_x =  math.trunc(lat)
+		tile_y =  math.trunc(lon)
+		off_lon = (abs(lon) - math.trunc(abs(lon)))
 
+		stride_lon = range_lon
+		while stride_lon >= 0:
+			beg_y = math.floor(srtm1_source_res[1] * (off_lon                  ))
+			end_y = math.floor(srtm1_source_res[1] * (1 - stride_lon + off_lon ))
+			off_lat = (abs(lat) - math.trunc(abs(lat)))
+
+			stride_lat = range_lat
+
+			
+			while stride_lat >= 0:
+				beg_x = math.floor(srtm1_source_res[0] * (off_lat					 ))
+				end_x = math.floor(srtm1_source_res[0] * (1 - stride_lat + off_lat 	 ))
+				print(f'SUBMATRIX')		
+				print(f' {beg_x}, {end_x}  {beg_y}, {end_y}')		
+				subraster = submatrix(self.raster_map[tile_y][tile_x], range(beg_y, end_y), range(beg_x, end_x))
+				for row in subraster:
+					raster = row if raster is None  else  np.vstack([raster, row])
+				print(raster )
+				stride_lat -= 1
+				tile_x+=1
+				off_lat = 0
+			
+
+
+
+			stride_lon -= 1
+			tile_y+=1
+			off_lon = 0
+		
+		return raster.astype('i2').tobytes()
+	
+		# do something with the height
 		
 	# ------- helpers
+
+	def dd_to_dms(dd):
+		'''
+			dms is a tuple (degree, min, sed)
+
+		'''
+		degrees = math.trunc(dd)
+		minutes = math.trunc( (dd-d) * 60 )
+		seconds = math.trunc(dd-d-m/60* 3600)
+		return degrees, minutes, seconds 
+
+
 	def load_srtm_file(self, lat, lon):
 		filepath = self.get_srtm_file_name(lat, lon) 
 		cachefile =  os.path.join(self.cache_dir, filepath)

@@ -55,32 +55,36 @@ class Grabber:
 	
 
 	## TODO Create a cache max that calls clean after
-	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, prefix='Tile',cache=False):
+	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, cache=False, prefix='Tile'):
 		if not raster_format in self.raster_formats:
 			raise Exception('Unsupported Format')
 
 		self.subclass.prepare_retrieve(bbox)
 		
+		bbox_end = bbox[2:]
 		bbox_size = bbox[2]  - bbox[0], bbox[3]  - bbox[1]
 		stride = bbox_size[0]/dimen[0] , bbox_size[1]/dimen[1] 
+
 		#for each tile in grid, create a few threads and run. Calls retrieve_tile for each tile
-		
+		j =0 
 		lon = bbox[1]
-		for j in range(0, dimen[1] ):
+		while lon < bbox_end[1]:
+			i=0
 			lat =bbox[0]
-			for i in range(0, dimen[0] ):
+			while lat < bbox_end[0]:
 				# TODO - thread this.
 				data = self.subclass.retrieve_tile( (lat, lon), (lat+stride[0], lon+stride[1]), raster_res, raster_format)
-				
-				filename = f'{prefix}_x{i}_y{j}.{raster_format}'
-				filename = os.path.join(outdir, filename)
-				self.save_tile(data, filename)
-
+				if not data is None:
+					filename = f'{prefix}_x{i}_y{j}.{raster_format}'
+					filename = os.path.join(outdir, filename)
+					self.save_tile(data, filename)
+				i+=1
 				lat += stride[0]
+			j+=1
 			lon += stride[1]
 		if cache:
 			self.clean_cache()
-
+		print('Done')
 
 	def clean_cache(self):
 		if not self.cache_dir is None:
