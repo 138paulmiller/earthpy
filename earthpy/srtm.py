@@ -62,23 +62,29 @@ class SRTM(grabber.Grabber):
 		end_lat, end_lon = end_latlon
 		range_lat, range_lon = end_lat - lat, end_lon -  lon 
 		
-		print('-------------TILE------------------')
+		print('-------------TILE {lat} {lon}------------------')
 		tile_x =  math.trunc(lat)
 		tile_y =  math.trunc(lon)
 		off_lon = (abs(lon) - math.trunc(abs(lon)))
 
 		stride_lon = range_lon
+
+
 		while stride_lon >= 0:
-			beg_y = math.floor(srtm1_source_res[1] * (off_lon                  ))
-			end_y = math.floor(srtm1_source_res[1] * (1 - stride_lon + off_lon ))
+			beg_y =  srtm1_source_res[1] * math.floor((off_lon                  ))
+			end_y =  srtm1_source_res[1]
+			if stride_lon != 1:
+				end_y = math.floor( end_y * (1 - stride_lon + off_lon ))
 			off_lat = (abs(lat) - math.trunc(abs(lat)))
 
 			stride_lat = range_lat
 
 			
 			while stride_lat >= 0:
-				beg_x = math.floor(srtm1_source_res[0] * (off_lat					 ))
-				end_x = math.floor(srtm1_source_res[0] * (1 - stride_lat + off_lat 	 ))
+				beg_x =srtm1_source_res[0] * math.floor((off_lat					 ))
+				end_x =  srtm1_source_res[0]
+				if stride_lat != 1:
+					end_x = math.floor( end_y * (1 - stride_lat + off_lat 	 ))
 				print(f'SUBMATRIX')		
 				print(f' {beg_x}, {end_x}  {beg_y}, {end_y}')		
 				subraster = submatrix(self.raster_map[tile_y][tile_x], range(beg_y, end_y), range(beg_x, end_x))
