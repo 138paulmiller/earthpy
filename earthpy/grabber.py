@@ -49,7 +49,7 @@ class Grabber:
 		pass
 
 
-	# Should return raw data 
+	# Must return raw data or path to file that contains data
 	def retrieve_tile(self, latlon, end_latlon, res, format):
 		raise Exception('Retrieve functionality is not implemented ')
 
