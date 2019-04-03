@@ -1,21 +1,80 @@
 import grabber
 
 
+import urllib
+import numpy as np
+import os
 
-styles = ['bluemarble', 's2cloudless'] 
+# styles from https://maps.eox.at/
 
-sat_image_get_url = lambda lon, lat, endlon, endlat, width, height, style  : \
-	"https://tiles.maps.eox.at/wms?service=wms&request=getmap&version=1.1.1&layers={style}&bbox={lon:.8f},{lat:.8f},{endlon:.8f},{endlat:.8f}&width={width}&height={height}&srs=epsg:4326" 
+
  
-# asnchrounously grab the tiles that intersect with the bbox. Download from server if they do not exist in cache
-# Base class
+   
 class SAT(grabber.Grabber):
-	def __init__(self):
-		super().__init__(self, raster_formats=('png') )
+	def __init__(self,subclass = None):
+		self.subclass = subclass
+		super().__init__(self, raster_formats=('png'))
 
-		
+ 	
 	def prepare_retrieve(self, bbox):
 		pass
 		
 	def retrieve_tile(self, latlon, end_latlon, res, format):
-		pass    
+		print('super')
+		return None
+		
+
+	def sat_image_get_url (self,  latlon, end_latlon, width, height, style):
+		
+		server_wms = 'https://tiles.maps.eox.at/wms?service=wms&request=getmap&version=1.1.1'
+		url = f'{server_wms}&layers={style}&bbox={latlon[0]:.8f},{latlon[1]:.8f},{end_latlon[0]:.8f},{end_latlon[1]:.8f}&width={width}&height={height}&srs=epsg:4326' 
+		return url
+
+		
+	def load_sat_file(self, latlon, end_latlon, res, style, format):
+		width,height = res
+
+		filepath = self.sat_image_get_filepath(latlon, end_latlon, width, height, style, format) 
+
+		cachefile =	 os.path.join(self.cache_dir, filepath)
+		url = self.sat_image_get_url(latlon, end_latlon, width, height, style) 
+		# search for filename in cache. If exists do nothing
+		if not os.path.exists( cachefile ):
+			print(f'Caching\n{cachefile}\n')
+			# create dirs for path
+			os.makedirs(os.path.dirname(cachefile), exist_ok=True)
+
+			urllib.request.urlretrieve(url, cachefile)
+		
+		#raster = np.memmap(cachefile, shape =res, mode = 'r').reshape(self.source_res)
+
+		return cachefile 
+		
+	def	sat_image_get_filepath(self, latlon, end_latlon, width, height, style, format):
+		# mkdir for style			
+		
+		lat,lon = latlon
+		filename = f'{lat}_{lon}_{width}x{height}.{format}'
+		filepath =os.path.join(style, filename)
+		return filepath
+
+		
+class VectorSAT(SAT):
+	def __init__(self):
+		super().__init__(self)
+		
+		
+	def retrieve_tile(self, latlon, end_latlon, res, format):
+		return self.load_sat_file(latlon, end_latlon, res, 'terrain-light', format)
+
+
+		
+class SentinelSAT(SAT):
+	def __init__(self):
+		super().__init__(self)
+		
+		
+	def retrieve_tile(self, latlon, end_latlon, res, format):
+		return self.load_sat_file(latlon, end_latlon, res, 's2cloudless', format)
+		
+		

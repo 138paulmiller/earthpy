@@ -19,7 +19,7 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     keywords=['gis', 'earth tiles','srtm', 'satellite imagery'],
-    install_requires=['numpy', 'scikit-image', 'argparse', 'matplotlib'],
+    install_requires=['numpy', 'scikit-image', 'argparse'],
     zip_safe=False,
     entry_points='''
         [console_scripts]

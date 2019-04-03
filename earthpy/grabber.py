@@ -1,4 +1,7 @@
-# cache all files that intersect with the bbox. Split the data accordingly to match the tile size requests
+'''
+TODO Run each retireve tile call in a thread.  
+'''
+
 import os
 import shutil
 
@@ -9,7 +12,6 @@ dataset_to_grabber_map = {}
 def add(dataset, grabber ):
 	global dataset_to_grabber_map
 	module_name, class_name = grabber.split('.')
-	print(dataset_to_grabber_map)
 	dataset_to_grabber_map[dataset] = getattr(__import__(module_name), class_name) 
 
 def get(dataset):
@@ -32,7 +34,7 @@ class Grabber:
 			bbox - latlon bound to query
 			raster_format - str representing the output format of raster
 			raster_res - resolution of raster
-			dimen - dimension of tiles grid to create from bbox. dimen is the  width and height of grid  
+			dimen - dimension of tiles grid to create from bbox. dimen is the  width and height of grid	 
 		'''
 		self.raster_formats = raster_formats
 		self.subclass = subclass if subclass else self
@@ -62,7 +64,7 @@ class Grabber:
 		self.subclass.prepare_retrieve(bbox)
 		
 		bbox_end = bbox[2:]
-		bbox_size = bbox[2]  - bbox[0], bbox[3]  - bbox[1]
+		bbox_size = bbox[2]	 - bbox[0], bbox[3]	 - bbox[1]
 		stride = bbox_size[0]/dimen[0] , bbox_size[1]/dimen[1] 
 
 		#for each tile in grid, create a few threads and run. Calls retrieve_tile for each tile
@@ -73,16 +75,28 @@ class Grabber:
 			lat =bbox[0]
 			while lat < bbox_end[0]:
 				# TODO - thread this.
-				data = self.subclass.retrieve_tile( (lat, lon), (lat+stride[0], lon+stride[1]), raster_res, raster_format)
-				if not data is None:
+				latlon = lat,lon
+				end_latlon = lat+stride[0], lon+stride[1]
+				print(f'Getting Tile_{i}_{j} BBox : {latlon}, {end_latlon}')
+
+				tile = self.subclass.retrieve_tile( latlon,end_latlon , raster_res, raster_format)
+				if not tile is None:
 					filename = f'{prefix}_x{i}_y{j}.{raster_format}'
 					filename = os.path.join(outdir, filename)
-					self.save_tile(data, filename)
+					
+					# if a string is returned. Expect that it is a path to the tile
+					if isinstance(tile, str):
+						# move file to expected output dir
+						os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+						os.rename(tile, filename)
+					else:
+						self.save_tile(tile, filename)
 				i+=1
 				lat += stride[0]
 			j+=1
 			lon += stride[1]
-		if cache:
+		if not cache:
 			self.clean_cache()
 		print('Done')
 

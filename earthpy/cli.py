@@ -69,7 +69,7 @@ def cli():
 								   metavar=('Format') , nargs=1 )
 
 	parser.add_argument('--outdir' , help=f'Raster tile output directory',
-								   metavar=('path') , nargs=1, default='out' )
+								   metavar=('path') , nargs=1, default=['out'] )
 
 	
 	# flag ewxample
@@ -87,7 +87,7 @@ def cli():
 	cli_args.format     = try_lower(maybe_datum(cli_args.format[0]  ))
 
 	# strip lists to datum
-	cli_args.outdir     = 			maybe_datum(cli_args.outdir  )
+	cli_args.outdir     = 			maybe_datum(cli_args.outdir[0]  )
 	
 	
 	if cli_args.res is None:
@@ -109,7 +109,7 @@ def cli():
 	# remove action. Leave only arguments
 	del  args_dict['action']
 	
-	print(args_dict)
+	#print(args_dict)
 
 	# get all required and optional args from  the cli args
 	action_args =  { key:args_dict[key] for key in all_args if key in args_dict.keys() and args_dict[key] != None}  

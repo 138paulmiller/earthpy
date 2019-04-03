@@ -6,9 +6,11 @@ Notice : exec_* arguments much match those defined with the cli module
 '''
 
 # Register data set grabbers
-grabber.add('sat', 'sat.SAT')
+grabber.add('sentinel', 'sat.SentinelSAT')
+grabber.add('vector', 'sat.VectorSAT')
 grabber.add('srtm', 'srtm.SRTM')
 
+#
 
 
 def exec_retrieve(dataset, outdir, bbox, format, res, dimen, cache=False):
