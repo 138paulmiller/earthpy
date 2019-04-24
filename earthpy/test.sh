@@ -3,13 +3,13 @@
 # Grabs a 3x5 grid from the Bounding Box (-120.0 35.0), (-119, 37) 
 
 lat_min=-119.0
-lat_max=-118.0
+lat_max=-115.0
 
 lon_min=34
-lon_max=35
+lon_max=38
 
-grid_x=2
-grid_y=2
+grid_x=8
+grid_y=8
 
 echo "Grabbing SRTM Heightmaps"
 python3 cli.py retrieve --data srtm     --outdir "Heightmaps" --format r16 --res 4033 4033 --dimen $grid_x $grid_y --bbox $lat_min $lon_min $lat_max $lon_max
