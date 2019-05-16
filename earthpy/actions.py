@@ -13,14 +13,14 @@ grabber.add('srtm', 'srtm.SRTM')
 #
 
 
-def exec_retrieve(dataset, outdir, bbox, format, res, dimen, cache=False):
+def exec_retrieve(dataset, outdir, bbox, format, res, dimen, cache):
 	'''
 	params
 	    bbox    : float tuple   ( minlat minlon maxlat maxlon )
 	    dataset : tuple         "dem"|"sat"
 	    res     : int           raster_resolution 
 	    dimen  : (int,int  )   dimensions of tile grid
-	    cache   : bool          True|False - save cached data after
+	    cache   : bool          True|False - save cached data after?
 	'''
 	#map dataset to class and call
 	try:

@@ -5,6 +5,8 @@ TODO Run each retireve tile call in a thread.
 import os
 import shutil
 
+
+
 dataset_to_grabber_map = {}
 # call to register support for new dataset
 # dataset - string representaion of dataset
@@ -36,6 +38,7 @@ class Grabber:
 			raster_res - resolution of raster
 			dimen - dimension of tiles grid to create from bbox. dimen is the  width and height of grid	 
 		'''
+		self.use_x_y_format = True
 		self.raster_formats = raster_formats
 		self.subclass = subclass if subclass else self
 		self.subclass_name = self.subclass.__class__.__name__.lower() 
@@ -59,7 +62,7 @@ class Grabber:
 	## TODO Create a cache max that calls clean after
 	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, cache, prefix='Tile'):
 		if not raster_format in self.raster_formats:
-			raise Exception('Unsupported Format')
+			raise Exception(f'Unsupported Format {raster_format}')
 
 		self.subclass.prepare_retrieve(bbox)
 		
@@ -78,10 +81,13 @@ class Grabber:
 				latlon = lat,lon
 				end_latlon = lat+stride[0], lon+stride[1]
 				print(f'Getting Tile_{i}_{j} BBox : {latlon}, {end_latlon}')
-
 				tile = self.subclass.retrieve_tile( latlon,end_latlon , raster_res, raster_format)
+				
 				if not tile is None:
-					filename = f'{prefix}_x{i}_y{j}.{raster_format}'
+					if self.use_x_y_format :
+						filename = f'{prefix}_x{i}_y{j}.{raster_format}'
+					else:
+						filename = f'{prefix}_N{lon}_E{lat}.{raster_format}'
 					filename = os.path.join(outdir, filename)
 					
 					# if a string is returned. Expect that it is a path to the tile

@@ -37,7 +37,7 @@ def submatrix(arr, row_range, col_range):
 # Grabs SRTM Data Default is GL1
 class SRTM(grabber.Grabber):
     def __init__(self, server_root=srtm1_server_root, source_res=srtm1_source_res):
-        super().__init__(self,  raster_formats=( 'r16' ) )
+        super().__init__(self,  raster_formats=( 'r16','gl1') )
         self.server_root =server_root
         self.source_res = source_res
         self.source_chunk_size = self.source_res[0]*self.source_res[1] 
@@ -70,18 +70,17 @@ class SRTM(grabber.Grabber):
         off_lon = (abs(lon) - math.trunc(abs(lon)))
 
         stride_lon = range_lon
+        
 
-
-        while stride_lon >= 0:
+        while stride_lon > 0:
             stride_lon_frac = (abs(stride_lon) - math.trunc(abs(stride_lon)))
-
+            
             beg_y =  math.floor( srtm1_source_res[1] * off_lon  )          
-            end_y =  beg_y + math.floor(srtm1_source_res[1] * stride_lon_frac   )
-  
+            end_y =  math.floor(beg_y + srtm1_source_res[1] * (1+stride_lon_frac )  )
   
             if tile_y < 0:
                 tile_row = self.raster_map[ math.trunc(end_lon) ]
-                range_y = range(end_y, beg_y,-1)
+                range_y = range(end_y-1, beg_y-1,-1)
                 
             else:
                 tile_row = self.raster_map[tile_y]
@@ -91,22 +90,22 @@ class SRTM(grabber.Grabber):
             off_lat = (abs(lat) - math.trunc(abs(lat)))
 
             stride_lat = range_lat
-            while stride_lat >= 0:
+            while stride_lat > 0:
                 stride_lat_frac = (abs(stride_lat) - math.trunc(abs(stride_lat)))
                 beg_x = math.floor( srtm1_source_res[0] * off_lat)
-                end_x =  beg_x + math.floor(srtm1_source_res[0] * stride_lat_frac   )
+                end_x =  math.floor(beg_x + srtm1_source_res[0] * (1+stride_lat_frac )  )
                 
                 if tile_x < 0:
                     tile = tile_row[ math.trunc(end_lat ) ]
-                    range_x = range(end_x, beg_x, -1)
+                    range_x = range(end_x-1, beg_x-1, -1)
                 else:
                     tile = tile_row[tile_x]
                     range_x = range(beg_x, end_x)
 
-                subraster = submatrix(tile, range_y, range(beg_x, end_x))
-
-                for row in subraster:
-                    raster = row if raster is None  else  np.vstack([raster, row])
+                subraster = submatrix(tile, range_y, range_x)
+    
+                raster = subraster if raster is None  else  np.vstack([raster, subraster])
+                
                 stride_lat -= 1
                 tile_x+=1
                 off_lat = 0
@@ -116,11 +115,11 @@ class SRTM(grabber.Grabber):
             off_lon = 0          
             
         # resize to fit resolution
-        
-        raster = skimage.transform.resize(raster, res, mode='edge', preserve_range=True,  anti_aliasing=True)        
+        #raster = skimage.filters.gaussian(raster, sigma=2.5, mode='nearest', multichannel=True, preserve_range=True, truncate=3.0)
+        raster = skimage.transform.resize(raster, res, mode='wrap', preserve_range=True,  anti_aliasing=True)        
         #scale_factor = float(res[0])/raster.shape[0], float(res[1])/raster.shape[1]
         #raster = skimage.transform.rescale(raster, scale=scale_factor, mode='wrap', preserve_range=True, multichannel=False, anti_aliasing=True)        
-        return raster.astype('i2').tobytes()
+        return raster.astype('<i2').tobytes()
     
         # do something with the height
         
@@ -164,7 +163,7 @@ class SRTM(grabber.Grabber):
         if lon >= 0:
             dirname = 'North/'
             prefix_lon = 'N' 
-            if lon > 30:
+            if lon >= 30:
                 dirname = os.path.join(dirname, 'North_30_60')
             else:
                 dirname = os.path.join(dirname, 'North_0_29')
