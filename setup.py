@@ -12,7 +12,6 @@ setup(
     description='Download and process Earth data',
     long_description='long_desc',
     long_description_content_type='text/markdown',
-    url='https://github.com/138paulmiller/earthpy',
     author='138paul',
     classifiers=[
         'Topic :: Scientific/Engineering :: GIS',

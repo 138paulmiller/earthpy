@@ -1,0 +1,1 @@
+./earthpy/cli.py $@
