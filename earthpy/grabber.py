@@ -60,7 +60,7 @@ class Grabber:
 	
 
 	## TODO Create a cache max that calls clean after
-	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, cache, prefix='Tile'):
+	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, prefix, cache):
 		if not raster_format in self.raster_formats:
 			raise Exception(f'Unsupported Format {raster_format}')
 

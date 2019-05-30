@@ -69,6 +69,8 @@ def cli():
 
 	parser.add_argument('--outdir' , help=f'Raster tile output directory',
 								   metavar=('path') , nargs=1, default=['out'] )
+	parser.add_argument('--prefix' , help=f'Prefix for raster file',
+								   metavar=('prefix') , nargs=1, default=['Tile'] )
 
 	
 	# flag ewxample
@@ -87,6 +89,7 @@ def cli():
 
 	# strip lists to datum
 	cli_args.outdir     = 			maybe_datum(cli_args.outdir[0]  )
+	cli_args.prefix     = 			maybe_datum(cli_args.prefix[0]  )
 	
 	
 	if cli_args.res is None:

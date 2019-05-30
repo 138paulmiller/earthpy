@@ -13,7 +13,7 @@ import os
 class SAT(grabber.Grabber):
 	def __init__(self,subclass = None):
 		self.subclass = subclass
-		super().__init__(self, raster_formats=('png'))
+		super().__init__(self, raster_formats=('png', 'jpg', 'jpeg'))
 
  	
 	def prepare_retrieve(self, bbox):
