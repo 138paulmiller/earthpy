@@ -21,24 +21,18 @@ lat_max=38
 
 grid_x=2
 grid_y=2
-
-echo "Grabbing SRTM Heightmaps"
-eval $python3 $earthpy retrieve                     \
-    --prefix "Height"                       \
-    --data srtm                             \
-    --outdir "Heightmaps"                   \
-    --format png                            \
-    --res 505 505                         \
-    --dimen $grid_x $grid_y                 \
-    --bbox $lat_min $lon_min $lat_max $lon_max
-exit
-#########################################################################################
-
-
-
-
-
-
+#
+#echo "Grabbing SRTM Heightmaps"
+#eval $python3 $earthpy retrieve                     \
+#    --prefix "Height"                       \
+#    --data srtm                             \
+#    --outdir "Heightmaps"                   \
+#    --format png                            \
+#    --res 505 505                         \
+#    --dimen $grid_x $grid_y                 \
+#    --bbox $lat_min $lon_min $lat_max $lon_max
+#exit
+#
 
 lon_min=-130.0
 lon_max=-110.0
@@ -46,8 +40,8 @@ lon_max=-110.0
 lat_min=20
 lat_max=40
 
-grid_x=10
-grid_y=10
+grid_x=20
+grid_y=20
 
 echo "Grabbing SRTM Heightmaps"
 eval $python3 $earthpy retrieve                     \
@@ -55,7 +49,7 @@ eval $python3 $earthpy retrieve                     \
     --data srtm                             \
     --outdir "Heightmaps"                   \
     --format r16                            \
-    --res 100 100                         \
+    --res 505 505                           \
     --dimen $grid_x $grid_y                 \
     --bbox $lat_min $lon_min $lat_max $lon_max
 

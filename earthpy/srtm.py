@@ -111,7 +111,7 @@ class SRTM(grabber.Grabber):
 		if format == 'png':
 			self.save_raster(tile, filename)
 		elif format == 'r16':
-			raw_data = raster.astype('<i2').tobytes()	
+			raw_data = tile.astype('<i2').tobytes()	
 			with open(filename, "wb") as f:
 				f.write(raw_data)
 
