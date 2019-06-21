@@ -8,7 +8,7 @@ import os
 # styles from https://maps.eox.at/
 
 
- 
+#https://tiles.maps.eox.at/wms?service=wms&request=getmap&version=1.1.1&layers=s2cloudless&bbox=-118.0,33.0,-117.0,34.0&width=4096&height=4096&srs=epsg:4326
    
 class SAT(grabber.Grabber):
 	def __init__(self,subclass = None):
@@ -27,7 +27,7 @@ class SAT(grabber.Grabber):
 	def sat_image_get_url (self,  latlon, end_latlon, width, height, style):
 		
 		server_wms = 'https://tiles.maps.eox.at/wms?service=wms&request=getmap&version=1.1.1'
-		url = f'{server_wms}&layers={style}&bbox={latlon[0]:.8f},{latlon[1]:.8f},{end_latlon[0]:.8f},{end_latlon[1]:.8f}&width={width}&height={height}&srs=epsg:4326' 
+		url = f'{server_wms}&layers={style}&bbox={latlon[1]:.4f},{latlon[0]:.4f},{end_latlon[1]:.4f},{end_latlon[0]:.4f}&width={width}&height={height}&srs=epsg:4326' 
 		return url
 		
 	def check_url(self, url):
@@ -66,6 +66,8 @@ class SAT(grabber.Grabber):
 		filepath =os.path.join(style, filename)
 		return filepath
 
+	def export_tile(self, tile, filename, format):
+		pass # already exported when retrieved
 		
 class VectorSAT(SAT):
 	def __init__(self):

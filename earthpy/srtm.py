@@ -37,7 +37,7 @@ def submatrix(arr, row_range, col_range):
 # Grabs SRTM Data Default is GL1
 class SRTM(grabber.Grabber):
 	def __init__(self, server_root=srtm1_server_root, source_res=srtm1_source_res):
-		super().__init__(self,  raster_formats=( 'r16','gl1') )
+		super().__init__(self,  raster_formats=( 'r16','png') )
 		self.server_root =server_root
 		self.source_res = source_res
 		# grid of mapped memory to downloaded raster tiles
@@ -52,81 +52,69 @@ class SRTM(grabber.Grabber):
 		raster_map = {}
 
 		trunc_bbox = tuple(map(math.trunc, bbox))
-		for lon in range( trunc_bbox[1], trunc_bbox[3]+1):
-			raster_map[lon]  = {}
-			for lat in range(trunc_bbox[0], trunc_bbox[2]+1 ):
+		for lat in range( trunc_bbox[0], trunc_bbox[2]):
+			raster_map[lat]  = {}
+			for lon in range(trunc_bbox[1], trunc_bbox[3]):
 				filename = self.get_srtm_file_name(lat, lon) 
-				raster_map[lon][lat] = self.load_srtm_file(lat, lon) 
+				raster_map[lat][lon] = self.load_srtm_file(lat, lon) 
 		return raster_map
 
+
+	def save_raster(self, raster, filename ):
+		pixels = (255*(raster-32768)/(32767 + 32768 ) ).astype('uint16')
+		skimage.io.imsave(filename,  pixels)
+		
 	def retrieve_tile(self, latlon, end_latlon, res, format):
 		# stride over each tile that overlaps and memcpy block into row. then move to next row
 		# load in neighboring tiles
-		lat, lon = latlon
-		end_lat, end_lon = end_latlon
-
-		raster_map =  self.retrieve_tiles_in_bbox( (lat-1, lon-1,end_lat+1, end_lon+1)) 
-		raster =  None
-		range_lat, range_lon = end_lat - lat, end_lon -  lon 
-		
-		tile_x =  math.trunc(lat)
-		tile_y =  math.trunc(lon)
-		off_lon = (abs(lon) - math.trunc(abs(lon)))
-
-		stride_lon = range_lon
+		raster = self.load_srtm_file(latlon[0],latlon[1])
+		#raster = skimage.transform.resize(raster, res, mode='wrap', preserve_range=True,  anti_aliasing=True)        
 		
 
-		while stride_lon > 0:
-			stride_lon_frac = (abs(stride_lon) - math.trunc(abs(stride_lon)))
-			
-			beg_y =  math.floor( srtm1_source_res[1] * off_lon  )          
-			end_y =  math.floor(beg_y + srtm1_source_res[1] * (1+stride_lon_frac )  )
-  
-			if tile_y < 0:
-				tile_row = raster_map[ math.trunc(end_lon) ]
-				range_y = range(end_y-1, beg_y-1,-1)
-				
-			else:
-				tile_row = raster_map[tile_y]
-				range_y = range(beg_y, end_y)
-				
-  
-			off_lat = (abs(lat) - math.trunc(abs(lat)))
+		# return raster.astype('<i2').tobytes()
+		raster = np.zeros(res)
+		
+		lat,lon = latlon
+		end_lat,end_lon = end_latlon
+		stride_lat,stride_lon = (end_lat - lat)/ (res[0]), (end_lon - lon)/ (res[1]) 
+		
+		raster_map =  self.retrieve_tiles_in_bbox( (lat-1, lon-1,end_lat+1,end_lon+1)) 
+		for raster_u in range(0, res[0]):
+			lat = latlon[0]
+			for raster_v in range(0, res[1]):
+				tile_u = lon - math.trunc(lon)
+				tile_v = lat - math.trunc(lat)				
+				sample_u, sample_v = math.trunc(srtm1_source_res[0]*tile_u), srtm1_source_res[1] - 1 - math.trunc(srtm1_source_res[1]*tile_v	)		
+				sample_lat, sample_lon = math.trunc(lat) , math.trunc(lon)
+				raster_sample = raster_map[sample_lat][sample_lon]
+				sample = raster_sample[ sample_v][sample_u] 
+				if sample <= -32767:
+					sample  = 1/8.0 * \
+						  raster_sample[ sample_v+1][sample_u-1] + raster_sample[sample_v+1][sample_u] +  raster_sample[sample_v+1][sample_u+1] \
+						+ raster_sample[ sample_v  ][sample_u-1] +                                        raster_sample[sample_v ][sample_u+1] \
+						+ raster_sample[ sample_v-1][sample_u-1] + raster_sample[sample_v-1][sample_u] +  raster_sample[sample_v-1][sample_u+1] \
+						
+				raster[ raster_v][ raster_u    ]  = sample
+				lat += stride_lat
+			lon += stride_lon
 
-			stride_lat = range_lat
-			while stride_lat > 0:
-				stride_lat_frac = (abs(stride_lat) - math.trunc(abs(stride_lat)))
-				beg_x = math.floor( srtm1_source_res[0] * off_lat)
-				end_x =  math.floor(beg_x + srtm1_source_res[0] * (1+stride_lat_frac )  )
-				
-				if tile_x < 0:
-					tile = tile_row[ math.trunc(end_lat ) ]
-					range_x = range(end_x-1, beg_x-1, -1)
-				else:
-					tile = tile_row[tile_x]
-					range_x = range(beg_x, end_x)
-
-				subraster = submatrix(tile, range_y, range_x)
-	
-				raster = subraster if raster is None  else  np.vstack([raster, subraster])
-				
-				stride_lat -= 1
-				tile_x+=1
-				off_lat = 0
-				
-			stride_lon -= 1
-			tile_y+=1
-			off_lon = 0          
-			
+		lat,lon = latlon
 		# resize to fit resolution
-		#raster = skimage.filters.gaussian(raster, sigma=2.5, mode='nearest', multichannel=True, preserve_range=True, truncate=3.0)
-		raster = skimage.transform.resize(raster, res, mode='wrap', preserve_range=True,  anti_aliasing=True)        
-		#scale_factor = float(res[0])/raster.shape[0], float(res[1])/raster.shape[1]
-		#raster = skimage.transform.rescale(raster, scale=scale_factor, mode='wrap', preserve_range=True, multichannel=False, anti_aliasing=True)        
-		return raster.astype('<i2').tobytes()
+		# raster = skimage.transform.resize(raster, res, mode='wrap', preserve_range=True,  anti_aliasing=True)        
+		
+		return raster
 	
 		# do something with the height
 		
+	def export_tile(self, tile, filename, format):
+		if format == 'png':
+			self.save_raster(tile, filename)
+		elif format == 'r16':
+			raw_data = raster.astype('<i2').tobytes()	
+			with open(filename, "wb") as f:
+				f.write(raw_data)
+
+
 	# ------- helpers
 
 	def dd_to_dms(dd):
@@ -171,10 +159,10 @@ class SRTM(grabber.Grabber):
 	def get_srtm_file_name(self, lat, lon):   
 		lat = math.trunc(lat)
 		lon = math.trunc(lon)
-		if lon >= 0:
+		if lat >= 0:
 			dirname = 'North/'
-			prefix_lon = 'N' 
-			if lon >= 30:
+			prefix_lat = 'N' 
+			if lat >= 30:
 			   # dirname = os.path.join(dirname, 'North_30_60')
 				dirname = dirname+ 'North_30_60'
 			else:
@@ -184,16 +172,16 @@ class SRTM(grabber.Grabber):
 		else: # if less then zero query southern tiles. remove sign
 			lon *= -1
 			dirname = 'South/'
-			prefix_lon = 'S'
+			prefix_lat = 'S'
 
-		if lat  >= 0:
-			prefix_lat = 'E' 
+		if lon  >= 0:
+			prefix_lon = 'E' 
 		else: # if less then zero query westward tiles. remove sign
-			lat *= -1
-			prefix_lat = 'W'
+			lon *= -1
+			prefix_lon = 'W'
 		
 
-		filename = f'{prefix_lon}{lon:02}{prefix_lat}{lat:03}.hgt'
+		filename = f'{prefix_lat}{lat:02}{prefix_lon}{lon:03}.hgt'
 		#filepath = os.path.join(dirname, filename) 
 		filepath = dirname + '/' +filename 
 

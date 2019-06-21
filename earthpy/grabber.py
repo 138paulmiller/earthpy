@@ -38,7 +38,6 @@ class Grabber:
 			raster_res - resolution of raster
 			dimen - dimension of tiles grid to create from bbox. dimen is the  width and height of grid	 
 		'''
-		self.use_x_y_format = True
 		self.raster_formats = raster_formats
 		self.subclass = subclass if subclass else self
 		self.subclass_name = self.subclass.__class__.__name__.lower() 
@@ -60,7 +59,7 @@ class Grabber:
 	
 
 	## TODO Create a cache max that calls clean after
-	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, prefix, cache):
+	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, prefix, cache,use_x_y_format):
 		if not raster_format in self.raster_formats:
 			raise Exception(f'Unsupported Format {raster_format}')
 
@@ -84,20 +83,27 @@ class Grabber:
 				tile = self.subclass.retrieve_tile( latlon,end_latlon , raster_res, raster_format)
 				
 				if not tile is None:
-					if self.use_x_y_format :
-						filename = f'{prefix}_x{i}_y{j}.{raster_format}'
+					if use_x_y_format :
+						filename = f'{prefix}_x{j}_y{i}.{raster_format}'
 					else:
-						filename = f'{prefix}_N{lon}_E{lat}.{raster_format}'
+						NS = 'N' if lat >= 0 else 'S'
+						EW = 'E' if lon >= 0 else 'W'
+						LAT = int(abs(lat))
+						LON = int(abs(lon))
+						filename = f'{prefix}_{NS}{LAT}_{EW}{LON}.{raster_format}'
 					filename = os.path.join(outdir, filename)
 					
 					# if a string is returned. Expect that it is a path to the tile
 					if isinstance(tile, str):
 						# move file to expected output dir
 						os.makedirs(os.path.dirname(filename), exist_ok=True)
-
-						os.rename(tile, filename)
+						try:
+							os.rename(tile, filename)
+						except :
+							import shutil
+							shutil.move(tile, filename)
 					else:
-						self.save_tile(tile, filename)
+						self.save_tile(tile, filename, raster_format)
 				i+=1
 				lat += stride[0]
 			j+=1
@@ -116,11 +122,10 @@ class Grabber:
 	# ----------- helpers  ---------------------
 
 	# called after tile is retrieved!
-	def save_tile(self,raw_data, filename):
-		if raw_data:
+	def save_tile(self,tile, filename, format):
+		if not tile is None:
 			os.makedirs(os.path.dirname(filename), exist_ok=True)
-			with open(filename, "wb") as f:
-				f.write(raw_data)
+			self.subclass.export_tile(tile, filename, format)
 
 
 

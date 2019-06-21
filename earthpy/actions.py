@@ -13,7 +13,7 @@ grabber.add('srtm', 'srtm.SRTM')
 #
 
 
-def exec_retrieve(dataset, outdir, bbox, format, res, dimen, prefix, cache):
+def exec_retrieve(dataset, outdir, bbox, format, res, dimen, prefix, cache, use_xy_format):
 	'''
 	params
 	    bbox    : float tuple   ( minlat minlon maxlat maxlon )
@@ -24,7 +24,7 @@ def exec_retrieve(dataset, outdir, bbox, format, res, dimen, prefix, cache):
 	'''
 	#map dataset to class and call
 	try:
-		grabber.get(dataset).retrieve_tiles(outdir, bbox, format, res, dimen, prefix, cache)
+		grabber.get(dataset).retrieve_tiles(outdir, bbox, format, res, dimen, prefix, cache, use_xy_format)
 	except Exception as e :
 		print(str(e))
 

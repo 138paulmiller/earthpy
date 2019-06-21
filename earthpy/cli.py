@@ -76,6 +76,8 @@ def cli():
 	# flag ewxample
 	parser.add_argument('--cache', help='Caches raw datafiles locally. Faster re-retrieval',
 	                              action='store_true')
+	parser.add_argument('--use_xy_format', help='Caches raw datafiles locally. Faster re-retrieval',
+	                              action='store_true')
 									   
 	
 
