@@ -5,7 +5,7 @@ import os,math
 import urllib.request
 import numpy as np
 import skimage
-
+import imageio
 
 
 '''
@@ -61,9 +61,10 @@ class SRTM(grabber.Grabber):
 
 
 	def save_raster(self, raster, filename ):
-		pixels = (255*(raster-32768)/(32767 + 32768 ) ).astype('uint16')
-		skimage.io.imsave(filename,  pixels)
-		
+		pixels = np.array(65536*(raster-32768)/(32767 + 32768 )  )
+		#skimage.io.imsave(filename,  pixels.astype(np.uint16))
+		imageio.imsave(filename,  pixels)
+	
 	def retrieve_tile(self, latlon, end_latlon, res, format):
 		# stride over each tile that overlaps and memcpy block into row. then move to next row
 		# load in neighboring tiles
