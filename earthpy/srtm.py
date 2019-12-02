@@ -65,7 +65,7 @@ class SRTM(grabber.Grabber):
 		#skimage.io.imsave(filename,  pixels.astype(np.uint16))
 		imageio.imsave(filename,  pixels)
 	
-	def retrieve_tile(self, latlon, end_latlon, res, format, cache_dirself.subclass_name):
+	def retrieve_tile(self, latlon, end_latlon, res, format, cache_dir):
 		# stride over each tile that overlaps and memcpy block into row. then move to next row
 		# load in neighboring tiles
 		raster = self.load_srtm_file(latlon[0],latlon[1], cache_dir)
