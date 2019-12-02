@@ -18,7 +18,7 @@ echo "Grabbing SRTM Heightmaps"
 ./earth.py retrieve                     \
     --prefix "Height"                       \
     --data srtm                             \
-    --outdir "$root_dir/CampPendleton/Heightmaps"         \
+    --outdir "$root_dir/Earth/Heightmaps"         \
     --format r16                            \
     --res 3601 3601                         \
     --dimen $grid_x $grid_y                 \
@@ -29,7 +29,7 @@ echo "Grabbing Sentinel Images"
 ./earth.py  retrieve                     \
     --prefix "Sat"                          \
     --data sentinel                         \
-    --outdir "$root_dir/CampPendleton/Satellites"         \
+    --outdir "$root_dir/Earth/Satellites"         \
     --format jpg                            \
     --res 4096 4096                         \
     --dimen $grid_x $grid_y                 \

@@ -172,7 +172,7 @@ class SRTM(grabber.Grabber):
 
 		else: # if less then zero query southern tiles. remove sign
 			lat *= -1
-			dirname = 'South/'
+			dirname = 'South'
 			prefix_lat = 'S'
 
 		if lon  >= 0:
