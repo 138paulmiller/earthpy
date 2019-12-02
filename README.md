@@ -8,7 +8,7 @@ Initally created for the generation of Unreal Engine 4 Heightmaps and Textures t
 - Python Verion > 3.7 
 
 - numpy scikit-image argparse
-	python -m pip install numpy scipy scikit-image argparse
+	python3 -m pip install numpy scipy scikit-image argparse
 
 # Usage
 

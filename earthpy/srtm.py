@@ -1,4 +1,4 @@
-import grabber
+from . import  grabber
 
 from struct import unpack,calcsize
 import os,math
@@ -46,7 +46,7 @@ class SRTM(grabber.Grabber):
 	def prepare_retrieve(self, bbox):
 		pass # do nothing fore now. pre Loading will exceed memory mapping limits in some cases 
 
-	def retrieve_tiles_in_bbox(self, bbox):
+	def retrieve_tiles_in_bbox(self, bbox, cache_dir):
 		# cache all files that intersect with 
 		raster_i = 0
 		raster_map = {}
@@ -56,7 +56,7 @@ class SRTM(grabber.Grabber):
 			raster_map[lat]  = {}
 			for lon in range(trunc_bbox[1], trunc_bbox[3]):
 				filename = self.get_srtm_file_name(lat, lon) 
-				raster_map[lat][lon] = self.load_srtm_file(lat, lon) 
+				raster_map[lat][lon] = self.load_srtm_file(lat, lon, cache_dir) 
 		return raster_map
 
 
@@ -65,10 +65,10 @@ class SRTM(grabber.Grabber):
 		#skimage.io.imsave(filename,  pixels.astype(np.uint16))
 		imageio.imsave(filename,  pixels)
 	
-	def retrieve_tile(self, latlon, end_latlon, res, format):
+	def retrieve_tile(self, latlon, end_latlon, res, format, cache_dirself.subclass_name):
 		# stride over each tile that overlaps and memcpy block into row. then move to next row
 		# load in neighboring tiles
-		raster = self.load_srtm_file(latlon[0],latlon[1])
+		raster = self.load_srtm_file(latlon[0],latlon[1], cache_dir)
 		#raster = skimage.transform.resize(raster, res, mode='wrap', preserve_range=True,  anti_aliasing=True)        
 		
 
@@ -79,7 +79,7 @@ class SRTM(grabber.Grabber):
 		end_lat,end_lon = end_latlon
 		stride_lat,stride_lon = (end_lat - lat)/ (res[0]), (end_lon - lon)/ (res[1]) 
 		
-		raster_map =  self.retrieve_tiles_in_bbox( (lat-1, lon-1,end_lat+1,end_lon+1)) 
+		raster_map =  self.retrieve_tiles_in_bbox( (lat-1, lon-1,end_lat+1,end_lon+1), cache_dir) 
 		for raster_u in range(0, res[0]):
 			lat = latlon[0]
 			for raster_v in range(0, res[1]):
@@ -129,10 +129,10 @@ class SRTM(grabber.Grabber):
 		return degrees, minutes, seconds 
 
 
-	def load_srtm_file(self, lat, lon):
+	def load_srtm_file(self, lat, lon, cache_dir):
 		filepath = self.get_srtm_file_name(lat, lon) 
 		#cachefile =  os.path.join(self.cache_dir, filepath)
-		cachefile =  self.cache_dir + '/' + filepath
+		cachefile =  cache_dir + '/' + filepath
 		
 		#url = os.path.join(self.server_root, filepath)
 		url = self.server_root +'/'+ filepath
@@ -171,7 +171,7 @@ class SRTM(grabber.Grabber):
 				dirname = dirname + 'North_0_29'
 
 		else: # if less then zero query southern tiles. remove sign
-			lon *= -1
+			lat *= -1
 			dirname = 'South/'
 			prefix_lat = 'S'
 

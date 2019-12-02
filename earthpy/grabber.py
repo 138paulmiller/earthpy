@@ -1,10 +1,11 @@
 '''
-TODO Run each retireve tile call in a thread.  
+Grabber  : Utility to grab raw data from either internet or cache. 
+This file contains the the base class all datasets must override. 
 '''
 
 import os
 import shutil
-
+import importlib
 
 
 dataset_to_grabber_map = {}
@@ -13,8 +14,9 @@ dataset_to_grabber_map = {}
 # grabber - class that inherits Grabber formatted as "module.classname" where module is module.py
 def add(dataset, grabber ):
 	global dataset_to_grabber_map
-	module_name, class_name = grabber.split('.')
-	dataset_to_grabber_map[dataset] = getattr(__import__(module_name), class_name) 
+	dataset_to_grabber_map[dataset] = grabber
+	print(dataset_to_grabber_map[dataset] )
+
 
 def get(dataset):
 	global dataset_to_grabber_map
@@ -42,7 +44,6 @@ class Grabber:
 		self.subclass = subclass if subclass else self
 		self.subclass_name = self.subclass.__class__.__name__.lower() 
 		self.root_dir = os.path.abspath(os.path.dirname(__file__))
-		self.cache_dir = os.path.join(self.root_dir, f'__{self.subclass_name }cache__') if self.subclass_name  else None
 
 
 	#---------- interface ----------------
@@ -52,7 +53,7 @@ class Grabber:
 
 
 	# Must return raw data or path to file that contains data
-	def retrieve_tile(self, latlon, end_latlon, res, format):
+	def retrieve_tile(self, latlon, end_latlon, res, format, cache_dir):
 		raise Exception('Retrieve functionality is not implemented ')
 
 	# ----------- actions ---------------------
@@ -62,6 +63,10 @@ class Grabber:
 	def retrieve_tiles(self, outdir, bbox, raster_format, raster_res, dimen, prefix, cache,use_x_y_format):
 		if not raster_format in self.raster_formats:
 			raise Exception(f'Unsupported Format {raster_format}')
+		
+
+		name = self.subclass_name if self.subclass_name  else ''
+		cache_dir = os.path.join(outdir, f'__{name}cache__')
 
 		self.subclass.prepare_retrieve(bbox)
 		
@@ -80,7 +85,7 @@ class Grabber:
 				latlon = lat,lon
 				end_latlon = lat+stride[0], lon+stride[1]
 				print(f'Getting Tile_{i}_{j} BBox : {latlon}, {end_latlon}')
-				tile = self.subclass.retrieve_tile( latlon,end_latlon , raster_res, raster_format)
+				tile = self.subclass.retrieve_tile( latlon,end_latlon , raster_res, raster_format, cache_dir)
 				
 				if not tile is None:
 					if use_x_y_format :

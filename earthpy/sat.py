@@ -1,4 +1,4 @@
-import grabber
+from . import  grabber
 
 
 import urllib
@@ -38,12 +38,12 @@ class SAT(grabber.Grabber):
 		except:
 			return False
 		
-	def load_sat_file(self, latlon, end_latlon, res, style, format):
+	def load_sat_file(self, latlon, end_latlon, res, style, format, cache_dir):
 		width,height = res
 
 		filepath = self.sat_image_get_filepath(latlon, end_latlon, width, height, style, format) 
 
-		cachefile =	 os.path.join(self.cache_dir, filepath)
+		cachefile =	 os.path.join(cache_dir, filepath)
 		url = self.sat_image_get_url(latlon, end_latlon, width, height, style) 
 		# search for filename in cache. If exists do nothing
 		if not os.path.exists( cachefile ):
@@ -74,8 +74,8 @@ class VectorSAT(SAT):
 		super().__init__(self)
 		
 		
-	def retrieve_tile(self, latlon, end_latlon, res, format):
-		return self.load_sat_file(latlon, end_latlon, res, 'terrain-light', format)
+	def retrieve_tile(self, latlon, end_latlon, res, format, cache_dir):
+		return self.load_sat_file(latlon, end_latlon, res, 'terrain-light', format, cache_dir)
 
 
 		
@@ -84,7 +84,7 @@ class SentinelSAT(SAT):
 		super().__init__(self)
 		
 		
-	def retrieve_tile(self, latlon, end_latlon, res, format):
-		return self.load_sat_file(latlon, end_latlon, res, 's2cloudless', format)
+	def retrieve_tile(self, latlon, end_latlon, res, format, cache_dir):
+		return self.load_sat_file(latlon, end_latlon, res, 's2cloudless', format, cache_dir)
 		
 		
